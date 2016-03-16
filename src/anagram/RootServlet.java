@@ -1,11 +1,15 @@
 package anagram;
 
 import java.io.IOException;
+import java.util.Date;
 
+import javax.jdo.PersistenceManager;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 
+import com.google.appengine.api.datastore.Key;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
@@ -14,6 +18,11 @@ import com.google.appengine.api.users.UserServiceFactory;
 public class RootServlet extends HttpServlet {
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws
 	IOException, ServletException {
+		
+		PersistenceManager pm = PMF.get().getPersistenceManager();
+		UserData settings = new UserData();
+		
+		
 	// set the response type to be html text
 	resp.setContentType("text/html");
 	
@@ -27,6 +36,22 @@ public class RootServlet extends HttpServlet {
 	req.setAttribute("login_url", login_url);
 	req.setAttribute("logout_url", logout_url);
 	// get a request dispatcher and launch a jsp that will render our page
+	
+	if(u != null) {
+		Key user_key = KeyFactory.createKey("UserData", u.getUserId());
+		pm = PMF.get().getPersistenceManager();
+		try {
+			settings = pm.getObjectById(UserData.class, user_key);
+		} 
+		catch(Exception e) {
+		
+			settings.setID(user_key);
+			settings.setOffset(0);
+			//pm.makePersistent(settings);
+		}
+			pm.close();
+		}
+	
 	RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/root.jsp");
 	rd.forward(req, resp);
 	}
